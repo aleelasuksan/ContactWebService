@@ -33,7 +33,6 @@ public class Contact implements Serializable {
 	@XmlElement(required=true,nillable=false)
 	private String title;
 	private String name;
-	
 	private String email;
 	/** URL of photo */
 	private String photoUrl;

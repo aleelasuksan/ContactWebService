@@ -54,7 +54,7 @@ import contact.service.DaoFactory;
  * your project!  If you do, compare the JARs, or switch to a Maven
  * project so Maven will manage your dependencies. 
  * 
- * @author jim
+ * @author jim, Atit Leelasuksan 5510546221
  *
  */
 public class JettyMain {

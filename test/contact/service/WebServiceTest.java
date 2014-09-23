@@ -42,12 +42,14 @@ public class WebServiceTest {
 	public void testGetPass() throws Exception {
 		ContentResponse res = client.GET(url+1);
 		assertEquals("Response should be 200 OK", Status.OK.getStatusCode(), res.getStatus());
+		assertTrue("Have body content", !res.getContentAsString().isEmpty());
 	}
 	
 	@Test
 	public void testGetFail() throws InterruptedException, ExecutionException, TimeoutException {
 		ContentResponse res = client.GET(url+0);
 		assertEquals("Response should be 204 No Content", Status.NO_CONTENT.getStatusCode(), res.getStatus());
+		assertTrue("Empty Content", res.getContentAsString().isEmpty());
 	}
 	
 	@Test
