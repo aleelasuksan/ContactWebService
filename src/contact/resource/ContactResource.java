@@ -5,7 +5,9 @@ import java.util.List;
 import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
@@ -17,8 +19,8 @@ import contact.service.ContactDao;
 import contact.service.DaoFactory;
 
 /**
- * Provide Contact web resource.
- * With GET, GET with param, GET with query, POST, PUT with param, DELETE method.
+ * Provide Contact web resource that response to HTTP request
+ * With GET, GET with parameter, GET with query, POST, PUT with parameter, DELETE method.
  * @author Atit Leelasuksan 5510546221
  *
  */
@@ -153,5 +155,5 @@ public class ContactResource {
 		System.out.println("DELETE ERROR");
 		return Response.status(Status.BAD_REQUEST).build();
 	}
-	
+
 }
