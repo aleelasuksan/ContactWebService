@@ -118,12 +118,20 @@ public class JettyMain {
 		server.stop();
 	}
 	
-	public static String startServer(int port) throws Exception {
+	/**
+	 * run Server from following port and resource.
+	 * context path is /* as default.
+	 * @param port to run
+	 * @param resourcePackage resource location
+	 * @return uri of server
+	 * @throws Exception
+	 */
+	public static String startServer(int port,String resourcePackage) throws Exception {
 		server = new Server( port );
 		ServletContextHandler context = new ServletContextHandler( ServletContextHandler.SESSIONS );
 		context.setContextPath("/*");
 		ServletHolder holder = new ServletHolder( org.glassfish.jersey.servlet.ServletContainer.class );
-		holder.setInitParameter(ServerProperties.PROVIDER_PACKAGES, "contact.resource");
+		holder.setInitParameter(ServerProperties.PROVIDER_PACKAGES, resourcePackage);
 		context.addServlet( holder, "/*" );
 		server.setHandler( context );
 		System.out.println("Starting Jetty server on port " + port);
@@ -131,6 +139,12 @@ public class JettyMain {
 		return server.getURI()+"contacts/";
 	}
 	
+	/**
+	 * shutdown server.
+	 * @return true if server stopped.
+	 * 			false otherwise.
+	 * @throws Exception
+	 */
 	public static boolean stopServer() throws Exception {
 		if(server!=null) {
 			server.stop();

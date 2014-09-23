@@ -16,7 +16,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * A person is a contact with a name, title, and email.
  * title is text to display for this contact in a list of contacts,
  * such as a nickname or company name.
- * @author Atit Leelasuksan 5510546221
+ * @author jim, Atit Leelasuksan 5510546221
  */
 @Entity
 @Table(name="CONTACTS")

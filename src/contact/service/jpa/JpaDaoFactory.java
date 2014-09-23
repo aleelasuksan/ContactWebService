@@ -37,6 +37,10 @@ public class JpaDaoFactory extends DaoFactory {
 		contactDao = new JpaContactDao( em );
 	}
 	
+	/**
+	 * Get a singleton instance of the DaoFactory.
+	 * @return instance of a concrete DaoFactory
+	 */
 	public static JpaDaoFactory getInstance() {
 		if(factory == null) factory = new JpaDaoFactory();
 		return factory;

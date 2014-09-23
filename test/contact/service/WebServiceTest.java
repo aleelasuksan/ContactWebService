@@ -27,7 +27,7 @@ public class WebServiceTest {
 	
 	@Before
 	public void initializeSystem() throws Exception {
-		url = JettyMain.startServer(8080);
+		url = JettyMain.startServer(8080,"contact.resource");
 		client = new HttpClient();
 		client.start();
 	}
@@ -133,7 +133,7 @@ public class WebServiceTest {
 		Request req = client.newRequest(url+5555);
 		req = req.method(HttpMethod.DELETE);
 		res= req.send();
-		assertEquals("DELETE success response 204 No Content", Status.NO_CONTENT.getStatusCode(), res.getStatus());
+		assertEquals("DELETE success response 200 OK", Status.OK.getStatusCode(), res.getStatus());
 		res = client.GET(url+5555);
 		assertTrue("Is it really deleted", res.getContentAsString().isEmpty());
 	}

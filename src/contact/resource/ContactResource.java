@@ -86,7 +86,7 @@ public class ContactResource {
 	 * @param element of contact.
 	 * @param uriInfo info of requested uri.
 	 * @return Created response if create success.
-	 * 		   N
+	 * 	
 	 */
 	@POST
 	@Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -148,7 +148,7 @@ public class ContactResource {
 		boolean isSuccess = dao.delete(id);
 		if( isSuccess ) {
 			System.out.println("Delete id:" + id);
-			return Response.noContent().build();
+			return Response.ok().build();
 		}
 		System.out.println("DELETE ERROR");
 		return Response.status(Status.BAD_REQUEST).build();

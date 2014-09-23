@@ -3,6 +3,7 @@ package contact.service.mem;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 import javax.xml.bind.JAXBContext;
@@ -19,7 +20,7 @@ import contact.service.DaoFactory;
  * This enables you to change the implementation of the actual ContactDao
  * without changing the rest of your application.
  * 
- * @author jim
+ * @author jim, Atit Leelasuksan 5510546221
  */
 public class MemDaoFactory extends DaoFactory {
 	// singleton instance of this factory
@@ -31,11 +32,20 @@ public class MemDaoFactory extends DaoFactory {
 		loadFile("c://Contact.xml");
 	}
 	
+	/**
+	 * Get a singleton instance of the DaoFactory.
+	 * @return instance of a concrete DaoFactory
+	 */
 	public static MemDaoFactory getInstance() {
 		if (factory == null) factory = new MemDaoFactory();
 		return factory;
 	}
 	
+	/**
+	 * load data from file by unmarshall file locate at filePath
+	 * then add all contact to DAO
+	 * @param filePath path of file to load.
+	 */
 	public void loadFile(String filePath) {
 		File infile = new File(filePath);
 		try {
@@ -70,10 +80,13 @@ public class MemDaoFactory extends DaoFactory {
 			ContactList list = new ContactList(contacts);
 			FileOutputStream output = new FileOutputStream("c://Contact.xml");
 			marshaller.marshal(list, output);
+			output.close();
 		} catch (JAXBException e) {
 			e.printStackTrace();
 		} catch (FileNotFoundException ex) {
 			ex.printStackTrace();
+		} catch (IOException iex) {
+			iex.printStackTrace();
 		}
 
 	}
