@@ -5,14 +5,11 @@ import java.util.List;
 import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 
 import contact.entity.Contact;
 import contact.entity.ContactList;
@@ -39,7 +36,7 @@ public class ContactResource {
 	 * Initialize Resource and Contact Data Access Object.
 	 */
 	public ContactResource() {
-		dao = DaoFactory.getInstance().getContactDao();
+		dao = DaoFactory.getInstance("mem").getContactDao();
 	}
 	
 	/**
@@ -49,21 +46,21 @@ public class ContactResource {
 	 * @return reponse ok with entity of ContactList that provide all contact.
 	 */
 	@GET
-	@Produces(MediaType.TEXT_XML) 
-	public Response getContact(@QueryParam("q") String searchText) {
+	@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON}) 
+	public Response getContact(@QueryParam("title") String searchText) {
+		System.out.println("---GET---");
 		if(searchText==null) {
 			ContactList contacts = new ContactList(dao.findAll());
-			return Response.ok(contacts).build();
+			if(contacts.getContactList().size()>0)
+				return Response.ok(contacts).build();
+			return Response.noContent().build();
 		}
 		else {
-			ContactList contacts = new ContactList();
-			List<Contact> list = dao.findAll();
-			for(Contact contact : list) {
-				if(contact.getName().toLowerCase().contains(searchText.toLowerCase())) {
-					contacts.addContact(contact);
-				}
-			}
-			return Response.ok(contacts).build();
+			List<Contact> cont = dao.findByTitle(searchText);
+			ContactList contacts = new ContactList(cont);
+			if(contacts.getContactList().size()>0)
+				return Response.ok(contacts).build();
+			return Response.noContent().build();
 		}
 	}
 	
@@ -74,10 +71,13 @@ public class ContactResource {
 	 */
 	@GET
 	@Path("{id}")
-	@Produces(MediaType.TEXT_XML)
-	public Response getContactByID(@PathParam("id") int id) {
+	@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+	public Response getContactByID(@PathParam("id") long id) {
+		System.out.println("---GETID---");
 		Contact contact = dao.find(id);
-		return Response.ok(contact).build();
+		if(contact!=null)
+			return Response.ok(contact).build();
+		return Response.noContent().build();
 	}
 	
 	/**
@@ -89,16 +89,22 @@ public class ContactResource {
 	 * 		   N
 	 */
 	@POST
-	@Consumes(MediaType.TEXT_XML)
+	@Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 	public Response createContactXML(JAXBElement<Contact> element, @Context UriInfo uriInfo) {
+		System.out.println("---POST---");
 		Contact contact = element.getValue();
-		boolean isSuccess = dao.save(contact);
-		if( isSuccess ) {
-			System.out.println("Create name:" + contact.getName());
-			return Response.created(uriInfo.getAbsolutePath()).build();
+		if(dao.find(contact.getId())==null) {
+			boolean isSuccess = dao.save(contact);
+			if( isSuccess ) {
+				System.out.println("Create name:" + contact.getName());
+				return Response.created(uriInfo.getBaseUriBuilder().path("/contacts/{id}").build(contact.getId())).build();
+			}
+			System.out.println("CREATE ERROR");
+			return Response.status(Status.BAD_REQUEST).build();
 		}
-		System.out.println("CREATE ERROR");
-		return Response.notModified().build();
+		else {
+			return Response.status(Status.CONFLICT).location(uriInfo.getRequestUri()).entity(contact).build();
+		}
 	}
 	
 	/**
@@ -112,16 +118,20 @@ public class ContactResource {
 	 */
 	@PUT
 	@Path("{id}")
-	@Consumes(MediaType.TEXT_XML)
-	public Response updateContact(@PathParam("id") int id, JAXBElement<Contact> element, @Context UriInfo uriInfo) {
+	@Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+	public Response updateContact(@PathParam("id") long id, JAXBElement<Contact> element, @Context UriInfo uriInfo) {
+		System.out.println("---PUT---");
 		Contact contact = element.getValue();
-		boolean isSuccess = dao.update(contact);
-		if( isSuccess ) {
-			System.out.println("Update id:"+id);
-			return Response.ok(uriInfo.getRequestUri()).build();
+		if(contact!=null) {
+			contact.setId(id);
+			boolean isSuccess = dao.update(contact);
+			if( isSuccess ) {
+				System.out.println("Update id:"+id);
+				return Response.ok().build();
+			}
 		}
 		System.out.println("UPDATE ERROR");
-		return Response.notModified().build();
+		return Response.status(Status.BAD_REQUEST).build();
 	}
 	
 	/**
@@ -133,14 +143,15 @@ public class ContactResource {
 	 */
 	@DELETE
 	@Path("{id}")
-	public Response deleteContact(@PathParam("id") int id) {
+	public Response deleteContact(@PathParam("id") long id) {
+		System.out.println("---DELETE---");
 		boolean isSuccess = dao.delete(id);
 		if( isSuccess ) {
 			System.out.println("Delete id:" + id);
-			return Response.ok().build();
+			return Response.noContent().build();
 		}
 		System.out.println("DELETE ERROR");
-		return Response.notModified().build();
+		return Response.status(Status.BAD_REQUEST).build();
 	}
 	
 }

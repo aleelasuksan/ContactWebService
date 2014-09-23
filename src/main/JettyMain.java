@@ -1,10 +1,12 @@
+package main;
 
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+
+import contact.service.DaoFactory;
 
 /**
  * <p>
@@ -61,6 +63,7 @@ public class JettyMain {
 	 */
 	static final int PORT = 8080;
 
+	static private Server server;
 	/**
 	 * Create a Jetty server and a context, add Jetty ServletContainer
 	 * which dispatches requests to JAX-RS resource objects,
@@ -103,18 +106,37 @@ public class JettyMain {
 		// in the named package(s). 
 		holder.setInitParameter(ServerProperties.PROVIDER_PACKAGES, "contact.resource");
 		context.addServlet( holder, "/*" );
-
 		// (5) Add the context (our application) to the Jetty server.
 		server.setHandler( context );
 		
 		System.out.println("Starting Jetty server on port " + port);
 		server.start();
-		
 		System.out.println("Server started.  Press ENTER to stop it.");
 		int ch = System.in.read();
 		System.out.println("Stopping server.");
+		DaoFactory.getInstance("mem").shutdown();
 		server.stop();
 	}
 	
+	public static String startServer(int port) throws Exception {
+		server = new Server( port );
+		ServletContextHandler context = new ServletContextHandler( ServletContextHandler.SESSIONS );
+		context.setContextPath("/*");
+		ServletHolder holder = new ServletHolder( org.glassfish.jersey.servlet.ServletContainer.class );
+		holder.setInitParameter(ServerProperties.PROVIDER_PACKAGES, "contact.resource");
+		context.addServlet( holder, "/*" );
+		server.setHandler( context );
+		System.out.println("Starting Jetty server on port " + port);
+		server.start();
+		return server.getURI()+"contacts/";
+	}
+	
+	public static boolean stopServer() throws Exception {
+		if(server!=null) {
+			server.stop();
+			return true;
+		}
+		return false;
+	}
 }
 
