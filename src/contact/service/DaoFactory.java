@@ -29,15 +29,15 @@ public abstract class DaoFactory {
 	 * Get a singleton instance of the DaoFactory.
 	 * @return instance of a concrete DaoFactory
 	 */
-	public static DaoFactory getInstance(String factoryType) {
+	public static DaoFactory getInstance() {
 		if (factory == null) {
-			if(factoryType.toLowerCase().equals("mem"))
-				factory = MemDaoFactory.getInstance();
-			else if(factoryType.toLowerCase().equals("jpa")) {
-				factory = JpaDaoFactory.getInstance();
-			}
+			setFactory(new JpaDaoFactory());
 		}
 		return factory;
+	}
+	
+	public static void setFactory(DaoFactory fact) {
+		factory = fact;
 	}
 	
 	/**

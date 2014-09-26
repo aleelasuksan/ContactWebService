@@ -92,7 +92,7 @@ public class WebServiceTest {
 	 */
 	@Test
 	public void testPOSTPass() throws InterruptedException, TimeoutException, ExecutionException {
-		StringContentProvider content = new StringContentProvider("<contact id=\"1234\">" +
+		StringContentProvider content = new StringContentProvider("<contact id=\"2222\">" +
 				"<title>contact nickname or title</title>" +
 				"<name>contact's full name</name>" +
 				"<email>contact's email address</email>" +

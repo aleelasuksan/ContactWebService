@@ -22,7 +22,6 @@ public class JpaDaoFactory extends DaoFactory {
 	private static final String PERSISTENCE_UNIT = "contacts";
 	/** instance of the entity DAO */
 	private ContactDao contactDao;
-	private static JpaDaoFactory factory;
 	private final EntityManagerFactory emf;
 	private EntityManager em;
 	private static Logger logger;
@@ -31,19 +30,10 @@ public class JpaDaoFactory extends DaoFactory {
 		logger = Logger.getLogger(JpaDaoFactory.class.getName());
 	}
 	
-	protected JpaDaoFactory() {
+	public JpaDaoFactory() {
 		emf = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT);
 		em = emf.createEntityManager();
 		contactDao = new JpaContactDao( em );
-	}
-	
-	/**
-	 * Get a singleton instance of the DaoFactory.
-	 * @return instance of a concrete DaoFactory
-	 */
-	public static JpaDaoFactory getInstance() {
-		if(factory == null) factory = new JpaDaoFactory();
-		return factory;
 	}
 	
 	@Override

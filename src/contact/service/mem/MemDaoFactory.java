@@ -23,22 +23,12 @@ import contact.service.DaoFactory;
  * @author jim, Atit Leelasuksan 5510546221
  */
 public class MemDaoFactory extends DaoFactory {
-	// singleton instance of this factory
-	private static MemDaoFactory factory;
+
 	private MemContactDao daoInstance;
 	
-	private MemDaoFactory() {
+	public MemDaoFactory() {
 		daoInstance = new MemContactDao();
 		loadFile("c://Contact.xml");
-	}
-	
-	/**
-	 * Get a singleton instance of the DaoFactory.
-	 * @return instance of a concrete DaoFactory
-	 */
-	public static MemDaoFactory getInstance() {
-		if (factory == null) factory = new MemDaoFactory();
-		return factory;
 	}
 	
 	/**

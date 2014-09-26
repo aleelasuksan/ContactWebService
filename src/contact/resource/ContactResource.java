@@ -17,6 +17,7 @@ import contact.entity.Contact;
 import contact.entity.ContactList;
 import contact.service.ContactDao;
 import contact.service.DaoFactory;
+import contact.service.mem.MemDaoFactory;
 
 /**
  * Provide Contact web resource that response to HTTP request
@@ -38,7 +39,8 @@ public class ContactResource {
 	 * Initialize Resource and Contact Data Access Object.
 	 */
 	public ContactResource() {
-		dao = DaoFactory.getInstance("mem").getContactDao();
+		DaoFactory.setFactory(new MemDaoFactory());
+		dao = DaoFactory.getInstance().getContactDao();
 	}
 	
 	/**
