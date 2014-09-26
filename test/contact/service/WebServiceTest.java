@@ -100,7 +100,7 @@ public class WebServiceTest {
 				"</contact>");
 		ContentResponse res = client.newRequest(url).content(content,"application/xml").method(HttpMethod.POST).send();
 		assertEquals("POST complete should response 201 Created", Status.CREATED.getStatusCode(), res.getStatus());
-		res = client.GET(url+1234);
+		res = client.GET(url+2222);
 		assertTrue("Check by use GET request id that POSTED", !res.getContentAsString().isEmpty() );
 	}
 	

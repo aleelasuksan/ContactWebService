@@ -31,7 +31,7 @@ public abstract class DaoFactory {
 	 */
 	public static DaoFactory getInstance() {
 		if (factory == null) {
-			setFactory(new JpaDaoFactory());
+			setFactory(new MemDaoFactory());
 		}
 		return factory;
 	}

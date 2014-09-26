@@ -1,5 +1,6 @@
 package contact.entity;
 import java.io.Serializable;
+import java.util.Date;
 
 import javax.persistence.Entity;
 import javax.persistence.GenerationType;
@@ -36,6 +37,7 @@ public class Contact implements Serializable {
 	private String email;
 	/** URL of photo */
 	private String photoUrl;
+	private Date lastUpdate;
 	
 	/** Create a new contact with no data.  Intended for use by persistence framework. */
 	public Contact() { }
@@ -91,6 +93,14 @@ public class Contact implements Serializable {
 
 	public void setId(long id) {
 		this.id = id;
+	}
+	
+	public void setLastUpdate(Date date) {
+		lastUpdate = date;
+	}
+	
+	public Date getLastUpdate() {
+		return lastUpdate;
 	}
 
 	@Override
