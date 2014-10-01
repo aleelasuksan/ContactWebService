@@ -40,7 +40,9 @@ public class Contact implements Serializable {
 	private Date lastUpdate;
 	
 	/** Create a new contact with no data.  Intended for use by persistence framework. */
-	public Contact() { }
+	public Contact() {
+		lastUpdate = new Date();
+	}
 	
 	/** Create a new contact with the given title, name, and email address. */
 	public Contact(String title, String name, String email ) {
@@ -48,6 +50,7 @@ public class Contact implements Serializable {
 		this.name = name;
 		this.email = email;
 		this.photoUrl = "";
+		lastUpdate = new Date();
 	}
 
 	public Contact(long id) {
@@ -132,6 +135,7 @@ public class Contact implements Serializable {
 		this.setName(other.getName()); 
 		this.setEmail(other.getEmail());
 		this.setPhotoUrl(other.getPhotoUrl());
+		this.setLastUpdate(other.getLastUpdate());
 	}
 	
 	/**
@@ -149,6 +153,7 @@ public class Contact implements Serializable {
 		this.setName(update.getName()); 
 		this.setEmail(update.getEmail());
 		this.setPhotoUrl(update.getPhotoUrl());
+		lastUpdate = new Date();
 	}
 	
 	/**
