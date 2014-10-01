@@ -146,6 +146,7 @@ public class ContactResource {
 			boolean isSuccess = dao.update(contact);
 			if( isSuccess ) {
 				System.out.println("Update id:"+id);
+				eTag = new EntityTag(dao.find(id).getLastUpdate().hashCode()+"");
 				return Response.noContent().cacheControl(cc).tag(eTag).build();
 			}
 		}

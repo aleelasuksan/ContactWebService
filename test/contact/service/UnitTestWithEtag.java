@@ -124,7 +124,7 @@ public class UnitTestWithEtag {
 	@Test
 	public void testPUT() throws InterruptedException, TimeoutException, ExecutionException {
 		ContentResponse res = client.GET(url+1);
-		String etag = res.getHeaders().get(HttpHeader.ETAG);
+		String etag = "\""+res.getHeaders().get(HttpHeader.ETAG)+"\"";
 		StringContentProvider content = new StringContentProvider("<contact id=\"1\">" +
 				"<title>newContactTitle</title>" +
 				"<name>newContactName</name>" +
@@ -166,7 +166,7 @@ public class UnitTestWithEtag {
 				.content(content,"application/xml")
 				.method(HttpMethod.POST)
 				.send();
-		String etag = client.GET(url+9876).getHeaders().get(HttpHeader.ETAG);
+		String etag = "\""+res.getHeaders().get(HttpHeader.ETAG)+"\"";
 		res = client.newRequest(url+9876)
 				.method(HttpMethod.DELETE)
 				.header(HttpHeader.IF_NONE_MATCH, etag)
