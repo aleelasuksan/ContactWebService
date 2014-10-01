@@ -33,10 +33,14 @@ public class Contact implements Serializable {
 	@NotNull
 	@XmlElement(required=true,nillable=false)
 	private String title;
+	@XmlElement
 	private String name;
+	@XmlElement
 	private String email;
+	@XmlElement
 	/** URL of photo */
 	private String photoUrl;
+	@XmlElement
 	private Date lastUpdate;
 	
 	/** Create a new contact with no data.  Intended for use by persistence framework. */

@@ -127,7 +127,7 @@ public class WebServiceTest {
 	/**
 	 * test success PUT request
 	 * put an update to exist contact
-	 * should response 200 OK without content.
+	 * should response 204 No Content.
 	 * also check that contact updated.
 	 * @throws InterruptedException
 	 * @throws TimeoutException
@@ -145,7 +145,7 @@ public class WebServiceTest {
 				"</contact>");
 		req = req.content(content, "application/xml");
 		ContentResponse res = req.send();
-		assertEquals("PUT Success response 200 OK", Status.OK.getStatusCode(), res.getStatus());
+		assertEquals("PUT Success response 204 OK", Status.NO_CONTENT.getStatusCode(), res.getStatus());
 		res = client.GET(url);
 		String con = res.getContentAsString();
 		
@@ -189,7 +189,7 @@ public class WebServiceTest {
 	/**
 	 * test success DELETE request
 	 * delete exist contact
-	 * shoudl response 200 OK and check that contact deleted.
+	 * should response 204 No Content and check that contact deleted.
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 * @throws TimeoutException
@@ -206,7 +206,7 @@ public class WebServiceTest {
 		Request req = client.newRequest(url+5555);
 		req = req.method(HttpMethod.DELETE);
 		res= req.send();
-		assertEquals("DELETE success response 200 OK", Status.OK.getStatusCode(), res.getStatus());
+		assertEquals("DELETE success response 204 OK", Status.NO_CONTENT.getStatusCode(), res.getStatus());
 		res = client.GET(url+5555);
 		assertTrue("Is it really deleted", res.getContentAsString().isEmpty());
 	}

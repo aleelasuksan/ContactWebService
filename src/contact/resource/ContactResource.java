@@ -7,18 +7,13 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.EntityTag;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBElement;
-
-import org.eclipse.jetty.http.HttpHeader;
-
 import contact.entity.Contact;
 import contact.entity.ContactList;
 import contact.service.ContactDao;
@@ -142,15 +137,16 @@ public class ContactResource {
 	public Response updateContact(@PathParam("id") long id, JAXBElement<Contact> element, @Context UriInfo uriInfo, @Context Request req) {
 		Contact contact = element.getValue();
 		Contact testCon = dao.find(id);
-		eTag = new EntityTag(testCon.getLastUpdate().hashCode()+"");
-		rb = req.evaluatePreconditions(eTag);
-		if(rb==null) return Response.status(Status.PRECONDITION_FAILED).build();
 		if(contact!=null) {
-			contact.setId(id);
+			eTag = new EntityTag(testCon.getLastUpdate().hashCode()+"");
+			rb = req.evaluatePreconditions(eTag);
+			if(rb==null) {
+				return Response.status(Status.PRECONDITION_FAILED).build();
+			}
 			boolean isSuccess = dao.update(contact);
 			if( isSuccess ) {
 				System.out.println("Update id:"+id);
-				return Response.ok().cacheControl(cc).tag(eTag).build();
+				return Response.noContent().cacheControl(cc).tag(eTag).build();
 			}
 		}
 		System.out.println("UPDATE ERROR");
@@ -171,11 +167,13 @@ public class ContactResource {
 		if(testCon!=null) {
 			eTag = new EntityTag(testCon.getLastUpdate().hashCode()+"");
 			rb = req.evaluatePreconditions(eTag);
-			if(rb==null) return Response.status(Status.PRECONDITION_FAILED).build();
+			if(rb==null) {
+				return Response.status(Status.PRECONDITION_FAILED).build();
+			}
 			boolean isSuccess = dao.delete(id);
 			if( isSuccess ) {
 				System.out.println("Delete id:" + id);
-				return Response.ok().build();
+				return Response.noContent().build();
 			}
 		}
 		System.out.println("DELETE ERROR");
