@@ -100,9 +100,15 @@ public class ContactResource {
 			String tag = contact.hashCode()+"";
 			System.out.println("GET: "+tag);
 			eTag = new EntityTag(tag);
-			if((ifMatch!=null&&!(tag.equals(ifMatch)))
-					||(ifNoneMatch!=null&&tag.equals(ifNoneMatch))) {
-				return Response.status(Status.NOT_MODIFIED).cacheControl(cc).tag(eTag).build();
+			if(ifMatch!=null) {
+				ifMatch = ifMatch.replace("\"", "");
+				if(!(tag.equals(ifMatch))) 
+					return Response.status(Status.NOT_MODIFIED).build();
+			}
+			else if(ifNoneMatch!=null) {
+				ifNoneMatch = ifNoneMatch.replace("\"", "");
+				if(tag.equals(ifNoneMatch)) 
+					return Response.status(Status.NOT_MODIFIED).build();
 			}
 			return Response.ok(contact).cacheControl(cc).tag(eTag).build();
 		}
@@ -156,9 +162,15 @@ public class ContactResource {
 			String tag = testCon.hashCode()+"";
 			System.out.println("PUT: "+tag);
 			eTag = new EntityTag(tag);
-			if((ifMatch!=null&&!(tag.equals(ifMatch)))
-					||(ifNoneMatch!=null&&tag.equals(ifNoneMatch))) {
-				return Response.status(Status.PRECONDITION_FAILED).build();
+			if(ifMatch!=null) {
+				ifMatch = ifMatch.replace("\"", "");
+				if(!(tag.equals(ifMatch))) 
+					return Response.status(Status.PRECONDITION_FAILED).build();
+			}
+			else if(ifNoneMatch!=null) {
+				ifNoneMatch = ifNoneMatch.replace("\"", "");
+				if(tag.equals(ifNoneMatch)) 
+					return Response.status(Status.PRECONDITION_FAILED).build();
 			}
 			boolean isSuccess = dao.update(contact);
 			if( isSuccess ) {
@@ -187,9 +199,15 @@ public class ContactResource {
 			String tag = testCon.hashCode()+"";
 			System.out.println("DELETE: "+tag);
 			eTag = new EntityTag(tag);
-			if((ifMatch!=null&&!(tag.equals(ifMatch)))
-					||(ifNoneMatch!=null&&tag.equals(ifNoneMatch))) {
-				return Response.status(Status.PRECONDITION_FAILED).build();
+			if(ifMatch!=null) {
+				ifMatch = ifMatch.replace("\"", "");
+				if(!(tag.equals(ifMatch))) 
+					return Response.status(Status.PRECONDITION_FAILED).build();
+			}
+			else if(ifNoneMatch!=null) {
+				ifNoneMatch = ifNoneMatch.replace("\"", "");
+				if(tag.equals(ifNoneMatch)) 
+					return Response.status(Status.PRECONDITION_FAILED).build();
 			}
 			boolean isSuccess = dao.delete(id);
 			if( isSuccess ) {
