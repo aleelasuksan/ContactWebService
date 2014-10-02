@@ -40,12 +40,10 @@ public class Contact implements Serializable {
 	@XmlElement
 	/** URL of photo */
 	private String photoUrl;
-	@XmlElement
-	private Date lastUpdate;
 	
 	/** Create a new contact with no data.  Intended for use by persistence framework. */
 	public Contact() {
-		lastUpdate = new Date();
+		
 	}
 	
 	/** Create a new contact with the given title, name, and email address. */
@@ -54,7 +52,6 @@ public class Contact implements Serializable {
 		this.name = name;
 		this.email = email;
 		this.photoUrl = "";
-		lastUpdate = new Date();
 	}
 
 	public Contact(long id) {
@@ -102,14 +99,6 @@ public class Contact implements Serializable {
 		this.id = id;
 	}
 	
-	public void setLastUpdate(Date date) {
-		lastUpdate = date;
-	}
-	
-	public Date getLastUpdate() {
-		return lastUpdate;
-	}
-
 	@Override
 	public String toString() {
 		return String.format("%s: %s <%s> (%d)", title, name, email, id);
@@ -139,7 +128,6 @@ public class Contact implements Serializable {
 		this.setName(other.getName()); 
 		this.setEmail(other.getEmail());
 		this.setPhotoUrl(other.getPhotoUrl());
-		this.setLastUpdate(other.getLastUpdate());
 	}
 	
 	/**
@@ -157,7 +145,6 @@ public class Contact implements Serializable {
 		this.setName(update.getName()); 
 		this.setEmail(update.getEmail());
 		this.setPhotoUrl(update.getPhotoUrl());
-		lastUpdate = new Date();
 	}
 	
 	/**
@@ -167,5 +154,10 @@ public class Contact implements Serializable {
 	 */
 	private static boolean isEmpty(String arg) {
 		return arg == null || arg.matches("\\s*") ;
+	}
+	
+	@Override
+	public int hashCode() {
+		return (this.id+this.title+this.name+this.email+this.photoUrl).hashCode();
 	}
 }

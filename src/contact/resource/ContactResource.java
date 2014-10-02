@@ -3,10 +3,20 @@ package contact.resource;
 import java.util.List;
 
 import javax.inject.Singleton;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -14,6 +24,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBElement;
+
 import contact.entity.Contact;
 import contact.entity.ContactList;
 import contact.service.ContactDao;
@@ -82,13 +93,16 @@ public class ContactResource {
 	@GET
 	@Path("{id}")
 	@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-	public Response getContactByID(@PathParam("id") long id, @Context Request req) {
+	public Response getContactByID(@PathParam("id") long id, @Context Request req
+			,@HeaderParam("If-Match") String ifMatch, @HeaderParam("If-None-Match") String ifNoneMatch) {
 		Contact contact = dao.find(id);
 		if(contact!=null) {
-			eTag = new EntityTag(contact.getLastUpdate().hashCode()+"");
-			rb = req.evaluatePreconditions(eTag);
-			if(rb!=null) {
-				return rb.status(Status.NOT_MODIFIED).cacheControl(cc).tag(eTag).build();
+			String tag = contact.hashCode()+"";
+			System.out.println("GET: "+tag);
+			eTag = new EntityTag(tag);
+			if((ifMatch!=null&&!(tag.equals(ifMatch)))
+					||(ifNoneMatch!=null&&tag.equals(ifNoneMatch))) {
+				return Response.status(Status.NOT_MODIFIED).cacheControl(cc).tag(eTag).build();
 			}
 			return Response.ok(contact).cacheControl(cc).tag(eTag).build();
 		}
@@ -111,7 +125,7 @@ public class ContactResource {
 			boolean isSuccess = dao.save(contact);
 			if( isSuccess ) {
 				System.out.println("Create name:" + contact.getName());
-				eTag = new EntityTag(contact.getLastUpdate().hashCode()+"");
+				eTag = new EntityTag(contact.hashCode()+"");
 				return Response.created(uriInfo.getBaseUriBuilder().path("/contacts/{id}").build(contact.getId())).cacheControl(cc).tag(eTag).build();
 			}
 			System.out.println("CREATE ERROR");
@@ -134,19 +148,22 @@ public class ContactResource {
 	@PUT
 	@Path("{id}")
 	@Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-	public Response updateContact(@PathParam("id") long id, JAXBElement<Contact> element, @Context UriInfo uriInfo, @Context Request req) {
+	public Response updateContact(@PathParam("id") long id, JAXBElement<Contact> element, @Context UriInfo uriInfo, @Context Request req
+			,@HeaderParam("If-Match") String ifMatch, @HeaderParam("If-None-Match") String ifNoneMatch) {
 		Contact contact = element.getValue();
 		Contact testCon = dao.find(id);
-		if(contact!=null) {
-			eTag = new EntityTag(testCon.getLastUpdate().hashCode()+"");
-			rb = req.evaluatePreconditions(eTag);
-			if(rb==null) {
+		if(contact!=null&&testCon!=null) {
+			String tag = testCon.hashCode()+"";
+			System.out.println("PUT: "+tag);
+			eTag = new EntityTag(tag);
+			if((ifMatch!=null&&!(tag.equals(ifMatch)))
+					||(ifNoneMatch!=null&&tag.equals(ifNoneMatch))) {
 				return Response.status(Status.PRECONDITION_FAILED).build();
 			}
 			boolean isSuccess = dao.update(contact);
 			if( isSuccess ) {
 				System.out.println("Update id:"+id);
-				eTag = new EntityTag(dao.find(id).getLastUpdate().hashCode()+"");
+				eTag = new EntityTag(dao.find(id).hashCode()+"");
 				return Response.noContent().cacheControl(cc).tag(eTag).build();
 			}
 		}
@@ -163,12 +180,15 @@ public class ContactResource {
 	 */
 	@DELETE
 	@Path("{id}")
-	public Response deleteContact(@PathParam("id") long id, @Context Request req) {
+	public Response deleteContact(@PathParam("id") long id, @Context Request req
+			,@HeaderParam("If-Match") String ifMatch, @HeaderParam("If-None-Match") String ifNoneMatch) {
 		Contact testCon = dao.find(id);
 		if(testCon!=null) {
-			eTag = new EntityTag(testCon.getLastUpdate().hashCode()+"");
-			rb = req.evaluatePreconditions(eTag);
-			if(rb==null) {
+			String tag = testCon.hashCode()+"";
+			System.out.println("DELETE: "+tag);
+			eTag = new EntityTag(tag);
+			if((ifMatch!=null&&!(tag.equals(ifMatch)))
+					||(ifNoneMatch!=null&&tag.equals(ifNoneMatch))) {
 				return Response.status(Status.PRECONDITION_FAILED).build();
 			}
 			boolean isSuccess = dao.delete(id);

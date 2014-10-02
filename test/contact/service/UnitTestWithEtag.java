@@ -84,8 +84,6 @@ public class UnitTestWithEtag {
 				.send();
 		assertEquals("POST complete should response 201 Created", Status.CREATED.getStatusCode(), res.getStatus());
 		assertTrue("POST response have ETag header", res.getHeaders().containsKey("ETag"));
-		res = client.GET(url+12);
-		assertTrue("Check by use GET request id that POSTED", !res.getContentAsString().isEmpty() );
 	}
 	
 	/**
@@ -97,7 +95,8 @@ public class UnitTestWithEtag {
 	@Test
 	public void testGetwithETag() throws Exception {
 		ContentResponse res = client.GET(url+1);
-		String etag = res.getHeaders().get(HttpHeader.ETAG);
+		String etag = res.getHeaders().get(HttpHeader.ETAG).replace("\"","");
+		System.out.println("GET ETag: "+etag);
 		res = client.newRequest(url+1)
 				.method(HttpMethod.GET)
 				.header(HttpHeader.IF_NONE_MATCH, etag)
@@ -110,6 +109,7 @@ public class UnitTestWithEtag {
 				.accept("application/xml")
 				.send();
 		assertEquals("Response should be 200 OK", Status.OK.getStatusCode(), res.getStatus());
+		assertTrue("GET response with content", !res.getContentAsString().isEmpty());
 	}
 	
 	/**
@@ -124,7 +124,8 @@ public class UnitTestWithEtag {
 	@Test
 	public void testPUT() throws InterruptedException, TimeoutException, ExecutionException {
 		ContentResponse res = client.GET(url+1);
-		String etag = "\""+res.getHeaders().get(HttpHeader.ETAG)+"\"";
+		String etag = res.getHeaders().get(HttpHeader.ETAG).replace("\"","");
+		System.out.println("PUT ETag: "+etag);
 		StringContentProvider content = new StringContentProvider("<contact id=\"1\">" +
 				"<title>newContactTitle</title>" +
 				"<name>newContactName</name>" +
@@ -166,7 +167,8 @@ public class UnitTestWithEtag {
 				.content(content,"application/xml")
 				.method(HttpMethod.POST)
 				.send();
-		String etag = "\""+res.getHeaders().get(HttpHeader.ETAG)+"\"";
+		String etag = res.getHeaders().get(HttpHeader.ETAG).replace("\"","");
+		System.out.println("DELETE ETag: "+etag);
 		res = client.newRequest(url+9876)
 				.method(HttpMethod.DELETE)
 				.header(HttpHeader.IF_NONE_MATCH, etag)
