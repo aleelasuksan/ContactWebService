@@ -214,7 +214,7 @@ public class WebServiceTest {
 	/**
 	 * test fail DELETE request
 	 * try to delete contact that doesn't exist
-	 * should response 400 BAD REQUEST.
+	 * should response 404 Not Found.
 	 * @throws InterruptedException
 	 * @throws TimeoutException
 	 * @throws ExecutionException
@@ -224,6 +224,6 @@ public class WebServiceTest {
 		Request req = client.newRequest(url+0);
 		req = req.method(HttpMethod.DELETE);
 		ContentResponse res= req.send();
-		assertEquals("Contact doesn't exist, response 400 Bad Request", Status.BAD_REQUEST.getStatusCode(), res.getStatus());
+		assertEquals("Contact doesn't exist, response 404 Not Found", Status.NOT_FOUND.getStatusCode(), res.getStatus());
 	}
 }

@@ -226,7 +226,7 @@ public class ContactResource {
 			}
 		}
 		System.out.println("DELETE ERROR");
-		return Response.status(Status.BAD_REQUEST).build();
+		return Response.status(Status.NOT_FOUND).build();
 	}
 
 }
