@@ -55,7 +55,7 @@ public class UnitTestWithEtag {
 	 * @throws Exception
 	 */
 	@Test
-	public void testGet() throws Exception {
+	public void testGet() throws InterruptedException, TimeoutException, ExecutionException {
 		ContentResponse res = client.GET(url+1);
 		assertEquals("Response should be 200 OK", Status.OK.getStatusCode(), res.getStatus());
 		assertTrue("Have body content", !res.getContentAsString().isEmpty());
@@ -93,7 +93,7 @@ public class UnitTestWithEtag {
 	 * @throws Exception
 	 */
 	@Test
-	public void testGetwithETag() throws Exception {
+	public void testGetwithETag() throws InterruptedException, TimeoutException, ExecutionException {
 		ContentResponse res = client.GET(url+1);
 		String etag = res.getHeaders().get(HttpHeader.ETAG).replace("\"","");
 		System.out.println("GET ETag: "+etag);

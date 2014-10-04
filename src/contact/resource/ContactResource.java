@@ -34,7 +34,7 @@ import contact.service.mem.MemDaoFactory;
 /**
  * Provide Contact web resource that response to HTTP request
  * With GET, GET with parameter, GET with query, POST, PUT with parameter, DELETE method.
- * now GET with id parameter, POST and PUT support ETag Header.
+ * now GET with id parameter, POST and PUT support ETag, If-Match, If-None-Match Header.
  * @author Atit Leelasuksan 5510546221
  *
  */
@@ -65,7 +65,8 @@ public class ContactResource {
 	 * Standard GET method to get all exist contact.
 	 * Alternate version is for query parameter, check for contact's name that contain searchText. 
 	 * @param searchText is query text to search
-	 * @return reponse ok with entity of ContactList that provide all contact.
+	 * @return OK response with entity of ContactList that provide all contact.
+	 * 			No Content response if can't find any contact.
 	 */
 	@GET
 	@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON}) 
@@ -88,7 +89,10 @@ public class ContactResource {
 	/**
 	 * GET method with path parameter of id.
 	 * @param id to GET specific contact that match the id.
-	 * @return response ok with entity of Contact.
+	 * @return OK response with entity of Contact include ETag.
+	 * 			Not Modified if If-Match header exist and matches.
+	 * 						or If-None-Match header exist and matches
+	 * 			No Content if can't find contact.
 	 */
 	@GET
 	@Path("{id}")
@@ -117,10 +121,14 @@ public class ContactResource {
 	
 	/**
 	 * POST method to create new contact from xml input.
-	 * 
+	 * if create success, response created with ETag
+	 * if id conflict with exist contact's id, response Conflict
+	 * otherwise Bad Request
 	 * @param element of contact.
 	 * @param uriInfo info of requested uri.
-	 * @return Created response if create success.
+	 * @return Created response with ETag if create success.
+	 * 			Conflict if id that try to create is already exist.
+	 * 			Bad Request for otherwise.
 	 * 	
 	 */
 	@POST
@@ -148,8 +156,9 @@ public class ContactResource {
 	 * @param id of contact to update.
 	 * @param element of contact.
 	 * @param uriInfo info of requested uri.
-	 * @return OK Response if update success.
-	 * 		   
+	 * @return OK response if update success.
+	 * 			Precondition Failed if If-Match/If-None-Match exist and condition fail
+	 * 			Bad Request if update id is not exist.
 	 */
 	@PUT
 	@Path("{id}")
@@ -187,8 +196,9 @@ public class ContactResource {
 	 * DELETE method to delete specific contact.
 	 * use if to indicate contact to delete.
 	 * @param id of contact.
-	 * @return OK Response if delete success.
-	 * 		   
+	 * @return OK response if delete success.
+	 * 			Precondition Failed if If-Match/If-None-Match exist and condition fail
+	 * 			Bad Request if update id is not exist.
 	 */
 	@DELETE
 	@Path("{id}")
