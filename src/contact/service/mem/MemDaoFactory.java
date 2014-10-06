@@ -23,12 +23,15 @@ import contact.service.DaoFactory;
  * @author jim, Atit Leelasuksan 5510546221
  */
 public class MemDaoFactory extends DaoFactory {
+//JIM Your filename (c:/Contact.xml" will fail if not using Windows
+	private static final String CONTACTS_FILE = "Contact.xml";
 
 	private MemContactDao daoInstance;
 	
 	public MemDaoFactory() {
 		daoInstance = new MemContactDao();
-		loadFile("c://Contact.xml");
+//JIM Same filename is used in several places. Use named constant instead.
+		loadFile(CONTACTS_FILE);
 	}
 	
 	/**
@@ -38,9 +41,12 @@ public class MemDaoFactory extends DaoFactory {
 	 */
 	public void loadFile(String filePath) {
 		File infile = new File(filePath);
+		if (! infile.exists() ) return;
+		
 		try {
 			JAXBContext context = JAXBContext.newInstance( ContactList.class );
 			Unmarshaller um = context.createUnmarshaller();
+//JIM Throws exception if file doesn't exist!
 			ContactList list = (ContactList)um.unmarshal(infile);
 			if(list!=null) {
 				List<Contact> contacts = list.getContactList();
@@ -68,7 +74,7 @@ public class MemDaoFactory extends DaoFactory {
 			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 			List<Contact> contacts = daoInstance.findAll();
 			ContactList list = new ContactList(contacts);
-			FileOutputStream output = new FileOutputStream("c://Contact.xml");
+			FileOutputStream output = new FileOutputStream(CONTACTS_FILE);
 			marshaller.marshal(list, output);
 			output.close();
 		} catch (JAXBException e) {
@@ -78,6 +84,6 @@ public class MemDaoFactory extends DaoFactory {
 		} catch (IOException iex) {
 			iex.printStackTrace();
 		}
-
 	}
+	
 }

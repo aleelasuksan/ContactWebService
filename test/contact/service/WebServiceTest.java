@@ -135,6 +135,8 @@ public class WebServiceTest {
 	 */
 	@Test
 	public void testPUTPass() throws InterruptedException, TimeoutException, ExecutionException {
+// Sloppy code: you *assume* that JettyMain returns URL ending with "/".
+// It is safer to append "/1" (as string) or use the URI class to build URL.
 		Request req = client.newRequest(url+1);
 		req = req.method(HttpMethod.PUT);
 		StringContentProvider content = new StringContentProvider("<contact id=\"1\">" +

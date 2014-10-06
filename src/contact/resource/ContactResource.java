@@ -39,12 +39,14 @@ public class ContactResource {
 	 * Initialize Resource and Contact Data Access Object.
 	 */
 	public ContactResource() {
+// The decision to use a particular factory shouldn't be done here.
+// Put in Main class instead.
 		DaoFactory.setFactory(new MemDaoFactory());
 		dao = DaoFactory.getInstance().getContactDao();
 	}
 	
 	/**
-	 * Standard GET method to get all exist contact.
+	 * Standard GET method to get all persisted contacts.
 	 * Alternate version is for query parameter, check for contact's name that contain searchText. 
 	 * @param searchText is query text to search
 	 * @return reponse ok with entity of ContactList that provide all contact.
@@ -52,6 +54,8 @@ public class ContactResource {
 	@GET
 	@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON}) 
 	public Response getContact(@QueryParam("title") String searchText) {
+		
+		//Jim: you should remove these println before submitting code
 		System.out.println("---GET---");
 		if(searchText==null) {
 			ContactList contacts = new ContactList(dao.findAll());
@@ -62,8 +66,10 @@ public class ContactResource {
 		else {
 			List<Contact> cont = dao.findByTitle(searchText);
 			ContactList contacts = new ContactList(cont);
+//ERROR: it is OK for contacts to be empty.  should return 200 and body <contacts></contacts>
 			if(contacts.getContactList().size()>0)
 				return Response.ok(contacts).build();
+//Wrong response code
 			return Response.noContent().build();
 		}
 	}
@@ -81,6 +87,7 @@ public class ContactResource {
 		Contact contact = dao.find(id);
 		if(contact!=null)
 			return Response.ok(contact).build();
+//ERROR: wrong response code. should be NOT FOUND
 		return Response.noContent().build();
 	}
 	
@@ -97,10 +104,14 @@ public class ContactResource {
 	public Response createContactXML(JAXBElement<Contact> element, @Context UriInfo uriInfo) {
 		System.out.println("---POST---");
 		Contact contact = element.getValue();
+// Convoluted logic. Rearrange to eliminate nested if.
+// In the most common case, contact.getId() is 0 and you don't need to bother
+// querying DAO.  Since DAO may take time, more efficient to test for getId() == 0 first.
 		if(dao.find(contact.getId())==null) {
 			boolean isSuccess = dao.save(contact);
 			if( isSuccess ) {
 				System.out.println("Create name:" + contact.getName());
+//JIM: Don't hardcode the "/contacts/" into path. Use uriInfo to get request uri. 
 				return Response.created(uriInfo.getBaseUriBuilder().path("/contacts/{id}").build(contact.getId())).build();
 			}
 			System.out.println("CREATE ERROR");
@@ -154,6 +165,7 @@ public class ContactResource {
 			System.out.println("Delete id:" + id);
 			return Response.ok().build();
 		}
+//ERROR: if contact doesn't exist it should return NOT_FOUND
 		System.out.println("DELETE ERROR");
 		return Response.status(Status.BAD_REQUEST).build();
 	}
