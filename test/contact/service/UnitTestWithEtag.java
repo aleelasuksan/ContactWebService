@@ -10,6 +10,9 @@ import org.eclipse.jetty.http.HttpMethod;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import contact.service.mem.MemDaoFactory;
+
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import javax.ws.rs.core.Response.Status;
@@ -33,6 +36,7 @@ public class UnitTestWithEtag {
 	 */
 	@Before
 	public void initializeSystem() throws Exception {
+		DaoFactory.setFactory(new MemDaoFactory());
 		url = JettyMain.startServer(8080,"contact.resource");
 		client = new HttpClient();
 		client.start();

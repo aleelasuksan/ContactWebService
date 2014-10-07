@@ -55,7 +55,6 @@ public class ContactResource {
 	 * Initialize Resource and Contact Data Access Object.
 	 */
 	public ContactResource() {
-		DaoFactory.setFactory(new MemDaoFactory());
 		dao = DaoFactory.getInstance().getContactDao();
 		cc = new CacheControl();
 		cc.setMaxAge(3600);
@@ -102,21 +101,20 @@ public class ContactResource {
 		Contact contact = dao.find(id);
 		if(contact!=null) {
 			String tag = contact.hashCode()+"";
-			System.out.println("GET: "+tag);
 			eTag = new EntityTag(tag);
-			if(ifMatch!=null) {
-				ifMatch = ifMatch.replace("\"", "");
-				if(!(tag.equals(ifMatch))) 
-					return Response.status(Status.NOT_MODIFIED).build();
-			}
-			else if(ifNoneMatch!=null) {
+			if(ifNoneMatch!=null) {
 				ifNoneMatch = ifNoneMatch.replace("\"", "");
 				if(tag.equals(ifNoneMatch)) 
 					return Response.status(Status.NOT_MODIFIED).build();
 			}
+			else if(ifMatch!=null) {
+				ifMatch = ifMatch.replace("\"", "");
+				if(!(tag.equals(ifMatch))) 
+					return Response.status(Status.NOT_MODIFIED).build();
+			} 
 			return Response.ok(contact).cacheControl(cc).tag(eTag).build();
 		}
-		return Response.noContent().build();
+		return Response.status(Status.NOT_FOUND).build();
 	}
 	
 	/**
@@ -138,7 +136,6 @@ public class ContactResource {
 		if(dao.find(contact.getId())==null) {
 			boolean isSuccess = dao.save(contact);
 			if( isSuccess ) {
-				System.out.println("Create name:" + contact.getName());
 				eTag = new EntityTag(contact.hashCode()+"");
 				return Response.created(uriInfo.getBaseUriBuilder().path("/contacts/{id}").build(contact.getId())).cacheControl(cc).tag(eTag).build();
 			}

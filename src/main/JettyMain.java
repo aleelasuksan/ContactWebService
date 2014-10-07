@@ -7,6 +7,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.jersey.server.ServerProperties;
 
 import contact.service.DaoFactory;
+import contact.service.mem.MemDaoFactory;
 
 /**
  * <p>
@@ -108,7 +109,7 @@ public class JettyMain {
 		context.addServlet( holder, "/*" );
 		// (5) Add the context (our application) to the Jetty server.
 		server.setHandler( context );
-		
+		DaoFactory.setFactory(new MemDaoFactory());
 		System.out.println("Starting Jetty server on port " + port);
 		server.start();
 		System.out.println("Server started.  Press ENTER to stop it.");
