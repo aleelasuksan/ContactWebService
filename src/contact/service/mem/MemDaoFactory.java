@@ -26,9 +26,9 @@ public class MemDaoFactory extends DaoFactory {
 
 	private MemContactDao daoInstance;
 	
-	public MemDaoFactory() {
+	public MemDaoFactory(String filepath) {
 		daoInstance = new MemContactDao();
-		loadFile("c://Contact.xml");
+		loadFile(filepath);
 	}
 	
 	/**

@@ -132,14 +132,19 @@ public class JpaContactDao implements ContactDao {
 	 */
 	@Override
 	public boolean update(Contact update) {
-		if(update != null) {
-			Contact contact = find(update.getId());
-			if(contact != null) {
-				contact.applyUpdate(update);
-				save(contact);
-				return true;
-			}
+		if (update == null) throw new IllegalArgumentException("Can't update a null contact");
+		if (find(update.getId()) == null) throw new IllegalArgumentException("Can't save a null contact");
+		EntityTransaction tx = em.getTransaction();
+		try {
+			tx.begin();
+			em.find(Contact.class, update.getId());
+			em.merge(update);
+			return true;
+		} catch (EntityExistsException ex) {
+			Logger.getLogger(this.getClass().getName()).warning(ex.getMessage());
+			if (tx.isActive()) try { tx.rollback(); } catch(Exception e) {}
+			return false;
 		}
-		return false;
+		
 	}
 }

@@ -31,7 +31,7 @@ public abstract class DaoFactory {
 	 */
 	public static DaoFactory getInstance() {
 		if (factory == null) {
-			setFactory(new MemDaoFactory());
+			setFactory(new MemDaoFactory("c://Contact.xml"));
 		}
 		return factory;
 	}

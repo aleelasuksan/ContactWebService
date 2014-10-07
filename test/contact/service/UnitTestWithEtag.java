@@ -36,7 +36,7 @@ public class UnitTestWithEtag {
 	 */
 	@Before
 	public void initializeSystem() throws Exception {
-		DaoFactory.setFactory(new MemDaoFactory());
+		DaoFactory.setFactory(new MemDaoFactory("c://Contact.xml"));
 		url = JettyMain.startServer(8080,"contact.resource");
 		client = new HttpClient();
 		client.start();

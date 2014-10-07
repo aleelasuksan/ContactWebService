@@ -127,7 +127,7 @@ public class ContactResource {
 	 */
 	@POST
 	@Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-	public Response createContactXML(JAXBElement<Contact> element, @Context UriInfo uriInfo, @Context Request req) {
+	public Response createContactXML(JAXBElement<Contact> element, @Context UriInfo uriInfo) {
 		Contact contact = element.getValue();
 		if(dao.find(contact.getId())==null) {
 			boolean isSuccess = dao.save(contact);
@@ -159,7 +159,8 @@ public class ContactResource {
 			,@HeaderParam("If-Match") String ifMatch, @HeaderParam("If-None-Match") String ifNoneMatch) {
 		Contact contact = element.getValue();
 		Contact testCon = dao.find(id);
-		if(contact!=null&&testCon!=null) {
+		if(testCon!=null) {
+			if(contact.getId()!=id) return Response.status(Status.BAD_REQUEST).build();
 			String tag = testCon.hashCode()+"";
 			eTag = new EntityTag(tag);
 			if(ifMatch!=null) {
@@ -175,10 +176,10 @@ public class ContactResource {
 			boolean isSuccess = dao.update(contact);
 			if( isSuccess ) {
 				eTag = new EntityTag(dao.find(id).hashCode()+"");
-				return Response.noContent().cacheControl(cc).tag(eTag).build();
+				return Response.ok().cacheControl(cc).tag(eTag).build();
 			}
 		}
-		return Response.status(Status.BAD_REQUEST).build();
+		return Response.status(Status.NOT_FOUND).build();
 	}
 	
 	/**
@@ -209,7 +210,7 @@ public class ContactResource {
 			}
 			boolean isSuccess = dao.delete(id);
 			if( isSuccess ) {
-				return Response.noContent().build();
+				return Response.ok().build();
 			}
 		}
 		return Response.status(Status.NOT_FOUND).build();

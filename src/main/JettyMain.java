@@ -109,7 +109,7 @@ public class JettyMain {
 		context.addServlet( holder, "/*" );
 		// (5) Add the context (our application) to the Jetty server.
 		server.setHandler( context );
-		DaoFactory.setFactory(new MemDaoFactory());
+		DaoFactory.setFactory(new MemDaoFactory("c://Contact.xml"));
 		System.out.println("Starting Jetty server on port " + port);
 		server.start();
 		System.out.println("Server started.  Press ENTER to stop it.");
@@ -125,9 +125,8 @@ public class JettyMain {
 	 * @param port to run
 	 * @param resourcePackage resource location
 	 * @return uri of server
-	 * @throws Exception
 	 */
-	public static String startServer(int port,String resourcePackage) throws Exception {
+	public static String startServer(int port,String resourcePackage) {
 		server = new Server( port );
 		ServletContextHandler context = new ServletContextHandler( ServletContextHandler.SESSIONS );
 		context.setContextPath("/*");
@@ -136,7 +135,11 @@ public class JettyMain {
 		context.addServlet( holder, "/*" );
 		server.setHandler( context );
 		System.out.println("Starting Jetty server on port " + port);
-		server.start();
+		try {
+			server.start();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return server.getURI()+"contacts/";
 	}
 	
@@ -144,11 +147,14 @@ public class JettyMain {
 	 * shutdown server.
 	 * @return true if server stopped.
 	 * 			false otherwise.
-	 * @throws Exception
 	 */
-	public static boolean stopServer() throws Exception {
+	public static boolean stopServer() {
 		if(server!=null) {
-			server.stop();
+			try {
+				server.stop();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			return true;
 		}
 		return false;
