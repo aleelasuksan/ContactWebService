@@ -72,16 +72,12 @@ public class ContactResource {
 	public Response getContact(@QueryParam("title") String searchText) {
 		if(searchText==null) {
 			ContactList contacts = new ContactList(dao.findAll());
-			if(contacts.getContactList().size()>0)
-				return Response.ok(contacts).build();
-			return Response.noContent().build();
+			return Response.ok(contacts).build();
 		}
 		else {
 			List<Contact> cont = dao.findByTitle(searchText);
 			ContactList contacts = new ContactList(cont);
-			if(contacts.getContactList().size()>0)
-				return Response.ok(contacts).build();
-			return Response.noContent().build();
+			return Response.ok(contacts).build();
 		}
 	}
 	
