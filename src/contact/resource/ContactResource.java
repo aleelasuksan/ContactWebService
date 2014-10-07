@@ -142,7 +142,6 @@ public class ContactResource {
 				eTag = new EntityTag(contact.hashCode()+"");
 				return Response.created(uriInfo.getBaseUriBuilder().path("/contacts/{id}").build(contact.getId())).cacheControl(cc).tag(eTag).build();
 			}
-			System.out.println("CREATE ERROR");
 			return Response.status(Status.BAD_REQUEST).build();
 		}
 		else {
@@ -169,7 +168,6 @@ public class ContactResource {
 		Contact testCon = dao.find(id);
 		if(contact!=null&&testCon!=null) {
 			String tag = testCon.hashCode()+"";
-			System.out.println("PUT: "+tag);
 			eTag = new EntityTag(tag);
 			if(ifMatch!=null) {
 				ifMatch = ifMatch.replace("\"", "");
@@ -183,12 +181,10 @@ public class ContactResource {
 			}
 			boolean isSuccess = dao.update(contact);
 			if( isSuccess ) {
-				System.out.println("Update id:"+id);
 				eTag = new EntityTag(dao.find(id).hashCode()+"");
 				return Response.noContent().cacheControl(cc).tag(eTag).build();
 			}
 		}
-		System.out.println("UPDATE ERROR");
 		return Response.status(Status.BAD_REQUEST).build();
 	}
 	
@@ -207,7 +203,6 @@ public class ContactResource {
 		Contact testCon = dao.find(id);
 		if(testCon!=null) {
 			String tag = testCon.hashCode()+"";
-			System.out.println("DELETE: "+tag);
 			eTag = new EntityTag(tag);
 			if(ifMatch!=null) {
 				ifMatch = ifMatch.replace("\"", "");
@@ -221,11 +216,9 @@ public class ContactResource {
 			}
 			boolean isSuccess = dao.delete(id);
 			if( isSuccess ) {
-				System.out.println("Delete id:" + id);
 				return Response.noContent().build();
 			}
 		}
-		System.out.println("DELETE ERROR");
 		return Response.status(Status.NOT_FOUND).build();
 	}
 
