@@ -1,6 +1,5 @@
 package contact.service;
 
-import contact.service.jpa.JpaDaoFactory;
 import contact.service.mem.MemDaoFactory;
 
 /**
@@ -31,7 +30,8 @@ public abstract class DaoFactory {
 	 */
 	public static DaoFactory getInstance() {
 		if (factory == null) {
-			setFactory(new MemDaoFactory("c://Contact.xml"));
+			// initialize default memory-based dao factory without an input file.
+			setFactory(new MemDaoFactory());
 		}
 		return factory;
 	}

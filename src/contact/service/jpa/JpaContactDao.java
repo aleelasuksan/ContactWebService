@@ -89,19 +89,14 @@ public class JpaContactDao implements ContactDao {
 	public boolean delete(long id) {
 		Contact contact = find(id);
 		if(contact != null) {
-			EntityTransaction ett = em.getTransaction();
+			EntityTransaction tx = em.getTransaction();
 			try {
-				ett.begin();
+				tx.begin();
 				em.remove(contact);
-				ett.commit();
+				tx.commit();
 				return true;
 			} catch (EntityExistsException ex) {
-				Logger.getLogger(this.getClass().getName()).warning(ex.getMessage());
-				if (ett.isActive()) {
-					try {
-						ett.rollback();
-					} catch (Exception e) {}
-				}
+				catchEntityException(tx,ex);
 			}
 		}
 		return false;
@@ -121,10 +116,9 @@ public class JpaContactDao implements ContactDao {
 			tx.commit();
 			return true;
 		} catch (EntityExistsException ex) {
-			Logger.getLogger(this.getClass().getName()).warning(ex.getMessage());
-			if (tx.isActive()) try { tx.rollback(); } catch(Exception e) {}
-			return false;
+			catchEntityException(tx,ex);
 		}
+		return false;
 	}
 
 	/**
@@ -141,10 +135,17 @@ public class JpaContactDao implements ContactDao {
 			em.merge(update);
 			return true;
 		} catch (EntityExistsException ex) {
-			Logger.getLogger(this.getClass().getName()).warning(ex.getMessage());
-			if (tx.isActive()) try { tx.rollback(); } catch(Exception e) {}
-			return false;
+			catchEntityException(tx,ex);
 		}
-		
+		return false;
+	}
+	
+	private void catchEntityException(EntityTransaction tx,Exception ex) {
+		Logger.getLogger(this.getClass().getName()).warning(ex.getMessage());
+		if (tx.isActive()) {
+			try {
+				tx.rollback();
+			} catch (Exception e) {}
+		}
 	}
 }

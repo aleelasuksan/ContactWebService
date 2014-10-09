@@ -11,8 +11,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import contact.entity.Contact;
 import contact.service.mem.MemDaoFactory;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import javax.ws.rs.core.Response.Status;
@@ -32,159 +35,195 @@ public class UnitTestWithEtag {
 	/**
 	 * method that done before test
 	 * use to start server and start httpclient for test.
-	 * @throws Exception
 	 */
 	@Before
-	public void initializeSystem() throws Exception {
-		DaoFactory.setFactory(new MemDaoFactory("c://Contact.xml"));
-		url = JettyMain.startServer(8080,"contact.resource");
+	public void initializeSystem() {
 		client = new HttpClient();
-		client.start();
+		try {
+			client.start();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		DaoFactory.setFactory(new MemDaoFactory());
+		url = JettyMain.startServer(8080,"contact.resource");
+		// always initialize with contact's id 1
+		// doesn't need to clear a dao because it use memory-based without load/save file.
+		addContact(1);
 	}
 	
 	/**
 	 * method that done after test
 	 * use to shutdown server and httpclient that tested.
-	 * @throws Exception
 	 */
 	@After
-	public void shutdownSystem() throws Exception {
+	public void shutdownSystem() {
 		JettyMain.stopServer();
-		client.stop();
+		try {
+			client.stop();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Add contact to dao.
+	 * @param id of contact.
+	 */
+	private void addContact(long id) {
+		Contact test = new Contact("Test contact", "Test Name", "none@testing.com");
+		test.setId(id);
+		DaoFactory.getInstance().getContactDao().save(test);
 	}
 	
 	/**
 	 * test success GET request
 	 * should response 200 OK with content and ETag header.
-	 * @throws Exception
 	 */
 	@Test
-	public void testGet() throws InterruptedException, TimeoutException, ExecutionException {
-		ContentResponse res = client.GET(url+1);
-		assertEquals("Response should be 200 OK", Status.OK.getStatusCode(), res.getStatus());
-		assertTrue("Have body content", !res.getContentAsString().isEmpty());
-		assertTrue("Have ETag header", res.getHeaders().containsKey("ETag"));
+	public void testGet(){
+		ContentResponse res;
+		try {
+			URI uri = new URI(url+"/1");
+			res = client.GET(uri);
+			assertEquals("Response should be 200 OK", Status.OK.getStatusCode(), res.getStatus());
+			assertTrue("Have body content", !res.getContentAsString().isEmpty());
+			assertTrue("Have ETag header", res.getHeaders().containsKey("ETag"));
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
 	 * test success POST request
 	 * post new contact to web server
 	 * should response 201 Created with ETag header and there is actual new contact in web server.
-	 * @throws InterruptedException
-	 * @throws TimeoutException
-	 * @throws ExecutionException
 	 */
 	@Test
-	public void testPOST() throws InterruptedException, TimeoutException, ExecutionException {
-		StringContentProvider content = new StringContentProvider("<contact id=\"12\">" +
+	public void testPOST() {
+		StringContentProvider content = new StringContentProvider("<contact id=\"11\">" +
 				"<title>contact nickname or title</title>" +
 				"<name>contact's full name</name>" +
 				"<email>contact's email address</email>" +
 				"<photoUrl></photoUrl>"+
 				"</contact>");
-		ContentResponse res = client.newRequest(url)
-				.content(content,"application/xml")
-				.method(HttpMethod.POST)
-				.send();
-		assertEquals("POST complete should response 201 Created", Status.CREATED.getStatusCode(), res.getStatus());
-		assertTrue("POST response have ETag header", res.getHeaders().containsKey("ETag"));
+		ContentResponse res;
+		try {
+			res = client.newRequest(url)
+					.content(content,"application/xml")
+					.method(HttpMethod.POST)
+					.send();
+			assertEquals("POST complete should response 201 Created", Status.CREATED.getStatusCode(), res.getStatus());
+			assertTrue("POST response have ETag header", res.getHeaders().containsKey("ETag"));
+			res = client.GET(res.getHeaders().get(HttpHeader.LOCATION));
+			assertTrue("Check by use GET request id that POSTED", !res.getContentAsString().isEmpty() );
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
 	 * test GET with If-Match, If-None-Match header request
 	 * for If-None-Match should response 304 Not Modified.
 	 * for If-Match should response 200 OK.
-	 * @throws Exception
 	 */
 	@Test
-	public void testGetwithETag() throws InterruptedException, TimeoutException, ExecutionException {
-		ContentResponse res = client.GET(url+1);
-		String etag = res.getHeaders().get(HttpHeader.ETAG).replace("\"","");
-		System.out.println("GET ETag: "+etag);
-		res = client.newRequest(url+1)
-				.method(HttpMethod.GET)
-				.header(HttpHeader.IF_NONE_MATCH, etag)
-				.accept("application/xml")
-				.send();
-		assertEquals("Response should be 304 Not Modified", Status.NOT_MODIFIED.getStatusCode(), res.getStatus());
-		res = client.newRequest(url+1)
-				.method(HttpMethod.GET)
-				.header(HttpHeader.IF_MATCH, etag)
-				.accept("application/xml")
-				.send();
-		assertEquals("Response should be 200 OK", Status.OK.getStatusCode(), res.getStatus());
-		assertTrue("GET response with content", !res.getContentAsString().isEmpty());
+	public void testGetwithETag() {
+		ContentResponse res;
+		try {
+			URI uri = new URI(url+"/1");
+			res = client.GET(uri);
+			String etag = res.getHeaders().get(HttpHeader.ETAG).replace("\"","");
+			res = client.newRequest(uri)
+					.method(HttpMethod.GET)
+					.header(HttpHeader.IF_NONE_MATCH, etag)
+					.accept("application/xml")
+					.send();
+			assertEquals("Response should be 304 Not Modified", Status.NOT_MODIFIED.getStatusCode(), res.getStatus());
+			res = client.newRequest(uri)
+					.method(HttpMethod.GET)
+					.header(HttpHeader.IF_MATCH, etag)
+					.accept("application/xml")
+					.send();
+			assertEquals("Response should be 200 OK", Status.OK.getStatusCode(), res.getStatus());
+			assertTrue("GET response with content", !res.getContentAsString().isEmpty());
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
 	 * test PUT with If-Match, If-None-Match header request
 	 * put an update to exist contact
-	 * for If-Match should response 204 No Content.
+	 * for If-Match should response 200 OK.
 	 * for If-None-Match should response 412 Precondition Failed.
-	 * @throws InterruptedException
-	 * @throws TimeoutException
-	 * @throws ExecutionException
 	 */
 	@Test
-	public void testPUT() throws InterruptedException, TimeoutException, ExecutionException {
-		ContentResponse res = client.GET(url+1);
-		String etag = res.getHeaders().get(HttpHeader.ETAG).replace("\"","");
-		System.out.println("PUT ETag: "+etag);
-		StringContentProvider content = new StringContentProvider("<contact id=\"1\">" +
-				"<title>newContactTitle</title>" +
-				"<name>newContactName</name>" +
-				"<email>aaa@g.g</email>" +
-				"<photoUrl>edvhyt</photoUrl>"+
-				"</contact>");
-		res = client.newRequest(url+1)
-				.method(HttpMethod.PUT)
-				.header(HttpHeader.IF_NONE_MATCH, etag)
-				.content(content, "application/xml")
-				.send();
-		assertEquals("PUT not success response 412 Precondition Failed", Status.PRECONDITION_FAILED.getStatusCode(), res.getStatus());
-		res = client.newRequest(url+1)
-				.method(HttpMethod.PUT)
-				.header(HttpHeader.IF_MATCH, etag)
-				.content(content, "application/xml")
-				.send();
-		assertEquals("PUT Success response 204 No Content", Status.NO_CONTENT.getStatusCode(), res.getStatus());
+	public void testPUT() {
+		ContentResponse res;
+		try {
+			URI uri = new URI(url+"/1");
+			res = client.GET(uri);
+			String etag = res.getHeaders().get(HttpHeader.ETAG).replace("\"","");
+			StringContentProvider content = new StringContentProvider("<contact id=\"1\">" +
+					"<title>newContactTitle</title>" +
+					"<name>newContactName</name>" +
+					"<email>aaa@g.g</email>" +
+					"<photoUrl>edvhyt</photoUrl>"+
+					"</contact>");
+			res = client.newRequest(uri)
+					.method(HttpMethod.PUT)
+					.header(HttpHeader.IF_NONE_MATCH, etag)
+					.content(content, "application/xml")
+					.send();
+			assertEquals("PUT not success response 412 Precondition Failed", Status.PRECONDITION_FAILED.getStatusCode(), res.getStatus());
+			res = client.newRequest(uri)
+					.method(HttpMethod.PUT)
+					.header(HttpHeader.IF_MATCH, etag)
+					.content(content, "application/xml")
+					.send();
+			assertEquals("PUT Success response 200 OK", Status.OK.getStatusCode(), res.getStatus());
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		
 	}
 	
 	/**
 	 * test DELETE If-Match, If-None-Match header request
 	 * delete exist contact
-	 * for If-Match should response 204 No Content
+	 * for If-Match should response 200 OK
 	 * for If-None-Match should response 412 Precondition Failed.
-	 * @throws InterruptedException
-	 * @throws ExecutionException
-	 * @throws TimeoutException
 	 */
 	@Test
-	public void testDELETE() throws InterruptedException, ExecutionException, TimeoutException {
-		StringContentProvider content = new StringContentProvider("<contact id=\"9876\">" +
-				"<title>contact nickname or title</title>" +
-				"<name>contact's full name</name>" +
-				"<email>contact's email address</email>" +
-				"<photoUrl>contact's telephone number</photoUrl>"+
-				"</contact>");
-		ContentResponse res = client.newRequest(url)
-				.content(content,"application/xml")
-				.method(HttpMethod.POST)
-				.send();
-		String etag = res.getHeaders().get(HttpHeader.ETAG).replace("\"","");
-		System.out.println("DELETE ETag: "+etag);
-		res = client.newRequest(url+9876)
-				.method(HttpMethod.DELETE)
-				.header(HttpHeader.IF_NONE_MATCH, etag)
-				.send();
-		assertEquals("DELETE not success 412 Precondition Failed", Status.PRECONDITION_FAILED.getStatusCode(), res.getStatus());
-		res = client.newRequest(url+9876)
-				.method(HttpMethod.DELETE)
-				.header(HttpHeader.IF_MATCH, etag)
-				.send();
-		assertEquals("DELETE success response 204 No Content", Status.NO_CONTENT.getStatusCode(), res.getStatus());
-		res = client.GET(url+9876);
-		assertTrue("Is it really deleted", res.getContentAsString().isEmpty());
+	public void testDELETE() {
+		ContentResponse res;
+		try {
+			URI uri = new URI(url+"/1");
+			res = client.GET(uri);
+			String etag = res.getHeaders().get(HttpHeader.ETAG).replace("\"","");
+			res = client.newRequest(uri)
+					.method(HttpMethod.DELETE)
+					.header(HttpHeader.IF_NONE_MATCH, etag)
+					.send();
+			assertEquals("DELETE not success 412 Precondition Failed", Status.PRECONDITION_FAILED.getStatusCode(), res.getStatus());
+			res = client.newRequest(uri)
+					.method(HttpMethod.DELETE)
+					.header(HttpHeader.IF_MATCH, etag)
+					.send();
+			assertEquals("DELETE success response 200 OK", Status.OK.getStatusCode(), res.getStatus());
+			res = client.GET(uri);
+			assertEquals("Is it really deleted", Status.NOT_FOUND.getStatusCode(), res.getStatus());
+		} catch (InterruptedException | TimeoutException | ExecutionException e) {
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
 	}
 	
 }

@@ -1,5 +1,7 @@
 package contact.resource;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import javax.inject.Singleton;
@@ -16,7 +18,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.EntityTag;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -29,7 +30,6 @@ import contact.entity.Contact;
 import contact.entity.ContactList;
 import contact.service.ContactDao;
 import contact.service.DaoFactory;
-import contact.service.mem.MemDaoFactory;
 
 /**
  * Provide Contact web resource that response to HTTP request
@@ -65,7 +65,6 @@ public class ContactResource {
 	 * Alternate version is for query parameter, check for contact's name that contain searchText. 
 	 * @param searchText is query text to search
 	 * @return OK response with entity of ContactList that provide all contact.
-	 * 			No Content response if can't find any contact.
 	 */
 	@GET
 	@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON}) 
@@ -86,28 +85,20 @@ public class ContactResource {
 	 * @param id to GET specific contact that match the id.
 	 * @return OK response with entity of Contact include ETag.
 	 * 			Not Modified if If-Match header exist and matches.
-	 * 						or If-None-Match header exist and matches
-	 * 			No Content if can't find contact.
+	 * 				or If-None-Match header exist and matches
+	 * 			Not Found if can't find contact.
 	 */
 	@GET
-	@Path("{id}")
+	@Path("{id: [1-9]\\d*}")
 	@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 	public Response getContactByID(@PathParam("id") long id, @Context Request req
 			,@HeaderParam("If-Match") String ifMatch, @HeaderParam("If-None-Match") String ifNoneMatch) {
 		Contact contact = dao.find(id);
 		if(contact!=null) {
 			String tag = contact.hashCode()+"";
+			if(!handleIfMatchAndNoneMatch(ifMatch, ifNoneMatch, tag))
+				return Response.status(Status.NOT_MODIFIED).build();
 			eTag = new EntityTag(tag);
-			if(ifNoneMatch!=null) {
-				ifNoneMatch = ifNoneMatch.replace("\"", "");
-				if(tag.equals(ifNoneMatch)) 
-					return Response.status(Status.NOT_MODIFIED).build();
-			}
-			else if(ifMatch!=null) {
-				ifMatch = ifMatch.replace("\"", "");
-				if(!(tag.equals(ifMatch))) 
-					return Response.status(Status.NOT_MODIFIED).build();
-			} 
 			return Response.ok(contact).cacheControl(cc).tag(eTag).build();
 		}
 		return Response.status(Status.NOT_FOUND).build();
@@ -129,11 +120,17 @@ public class ContactResource {
 	@Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 	public Response createContactXML(JAXBElement<Contact> element, @Context UriInfo uriInfo) {
 		Contact contact = element.getValue();
-		if(dao.find(contact.getId())==null) {
+		if(contact.getId()==0 || dao.find(contact.getId())==null) {
 			boolean isSuccess = dao.save(contact);
 			if( isSuccess ) {
+				URI locationHeader = null;
+				try {
+					locationHeader = new URI(uriInfo.getAbsolutePath() + "/" + contact.getId());
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+				}
 				eTag = new EntityTag(contact.hashCode()+"");
-				return Response.created(uriInfo.getBaseUriBuilder().path("/contacts/{id}").build(contact.getId())).cacheControl(cc).tag(eTag).build();
+				return Response.created(locationHeader).cacheControl(cc).tag(eTag).build();
 			}
 			return Response.status(Status.BAD_REQUEST).build();
 		}
@@ -150,10 +147,10 @@ public class ContactResource {
 	 * @param uriInfo info of requested uri.
 	 * @return OK response if update success.
 	 * 			Precondition Failed if If-Match/If-None-Match exist and condition fail
-	 * 			Bad Request if update id is not exist.
+	 * 			Not Found if update id is not exist.
 	 */
 	@PUT
-	@Path("{id}")
+	@Path("{id: [1-9]\\d*}")
 	@Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 	public Response updateContact(@PathParam("id") long id, JAXBElement<Contact> element, @Context UriInfo uriInfo, @Context Request req
 			,@HeaderParam("If-Match") String ifMatch, @HeaderParam("If-None-Match") String ifNoneMatch) {
@@ -162,17 +159,8 @@ public class ContactResource {
 		if(testCon!=null) {
 			if(contact.getId()!=id) return Response.status(Status.BAD_REQUEST).build();
 			String tag = testCon.hashCode()+"";
-			eTag = new EntityTag(tag);
-			if(ifMatch!=null) {
-				ifMatch = ifMatch.replace("\"", "");
-				if(!(tag.equals(ifMatch))) 
-					return Response.status(Status.PRECONDITION_FAILED).build();
-			}
-			else if(ifNoneMatch!=null) {
-				ifNoneMatch = ifNoneMatch.replace("\"", "");
-				if(tag.equals(ifNoneMatch)) 
-					return Response.status(Status.PRECONDITION_FAILED).build();
-			}
+			if(!handleIfMatchAndNoneMatch(ifMatch, ifNoneMatch, tag))
+				return Response.status(Status.PRECONDITION_FAILED).build();
 			boolean isSuccess = dao.update(contact);
 			if( isSuccess ) {
 				eTag = new EntityTag(dao.find(id).hashCode()+"");
@@ -188,32 +176,37 @@ public class ContactResource {
 	 * @param id of contact.
 	 * @return OK response if delete success.
 	 * 			Precondition Failed if If-Match/If-None-Match exist and condition fail
-	 * 			Bad Request if update id is not exist.
+	 * 			Not Found if update id is not exist.
 	 */
 	@DELETE
-	@Path("{id}")
+	@Path("{id: [1-9]\\d*}")
 	public Response deleteContact(@PathParam("id") long id, @Context Request req
 			,@HeaderParam("If-Match") String ifMatch, @HeaderParam("If-None-Match") String ifNoneMatch) {
 		Contact testCon = dao.find(id);
 		if(testCon!=null) {
 			String tag = testCon.hashCode()+"";
-			eTag = new EntityTag(tag);
-			if(ifMatch!=null) {
-				ifMatch = ifMatch.replace("\"", "");
-				if(!(tag.equals(ifMatch))) 
+			if(!handleIfMatchAndNoneMatch(ifMatch, ifNoneMatch, tag))
 					return Response.status(Status.PRECONDITION_FAILED).build();
-			}
-			else if(ifNoneMatch!=null) {
-				ifNoneMatch = ifNoneMatch.replace("\"", "");
-				if(tag.equals(ifNoneMatch)) 
-					return Response.status(Status.PRECONDITION_FAILED).build();
-			}
 			boolean isSuccess = dao.delete(id);
 			if( isSuccess ) {
 				return Response.ok().build();
 			}
 		}
 		return Response.status(Status.NOT_FOUND).build();
+	}
+	
+	private boolean handleIfMatchAndNoneMatch(String ifMatch, String ifNoneMatch,String tag) {
+		if(ifMatch!=null) {
+			ifMatch = ifMatch.replace("\"", "");
+			if(!(tag.equals(ifMatch))) 
+				return false;
+		}
+		else if(ifNoneMatch!=null) {
+			ifNoneMatch = ifNoneMatch.replace("\"", "");
+			if(tag.equals(ifNoneMatch)) 
+				return false;
+		}
+		return true;
 	}
 
 }

@@ -1,6 +1,8 @@
 package main;
 
 
+import java.net.URI;
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -109,14 +111,16 @@ public class JettyMain {
 		context.addServlet( holder, "/*" );
 		// (5) Add the context (our application) to the Jetty server.
 		server.setHandler( context );
-		DaoFactory.setFactory(new MemDaoFactory("c://Contact.xml"));
+		
+		// NOTE: setFactory to use Memory-based DAO Factory with an input file.
+		DaoFactory.setFactory(new MemDaoFactory("Contact.xml"));
+		
 		System.out.println("Starting Jetty server on port " + port);
 		server.start();
 		System.out.println("Server started.  Press ENTER to stop it.");
 		int ch = System.in.read();
 		System.out.println("Stopping server.");
-		DaoFactory.getInstance().shutdown();
-		server.stop();
+		stopServer();
 	}
 	
 	/**
@@ -140,7 +144,7 @@ public class JettyMain {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return server.getURI()+"contacts/";
+		return server.getURI()+"contacts";
 	}
 	
 	/**
@@ -152,6 +156,7 @@ public class JettyMain {
 		if(server!=null) {
 			try {
 				server.stop();
+				DaoFactory.getInstance().shutdown();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
